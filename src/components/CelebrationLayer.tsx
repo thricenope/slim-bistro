@@ -1,0 +1,78 @@
+import { useEffect } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
+import { useGame } from '../store'
+import { achById, XP_PER_TIER } from '../logic/quests'
+import { burst } from '../celebrate'
+import { Icon } from './Icon'
+
+/** 新徽章弹窗队列 */
+export const CelebrationLayer = () => {
+  const queue = useGame((s) => s.pendingCelebrate)
+  const dismiss = useGame((s) => s.dismissOneCelebrate)
+  const id = queue.length > 0 ? queue[0] : null
+  const ach = id ? achById(id) : null
+
+  // 自愈：持久化队列里查不到的旧 id（版本升级改名/删除）直接丢弃，否则会永久卡死弹窗
+  useEffect(() => {
+    if (id && !ach) dismiss()
+  }, [id, ach, dismiss])
+
+  // Esc 关闭，与 aria-modal 的语义保持一致
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && dismiss()
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [dismiss])
+
+  return (
+    <AnimatePresence>
+      {id && ach && (
+        <motion.div
+          className="cele-mask"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          key={id}
+          role="dialog"
+          aria-modal="true"
+          aria-label={`点亮徽章：${ach.name}`}
+        >
+          <motion.div
+            className="cele-card"
+            initial={{ scale: 0.4, y: 80 }}
+            animate={{ scale: 1, y: 0 }}
+            exit={{ scale: 0.7, opacity: 0 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+          >
+            <div className="rays" />
+            <div className="cele-kind">徽 章 点 亮</div>
+            <motion.div
+              className="cele-emoji"
+              initial={{ rotate: -20, scale: 0.4 }}
+              animate={{ rotate: 0, scale: 1 }}
+              transition={{ type: 'spring', stiffness: 260, damping: 11, delay: 0.12 }}
+            >
+              <Icon name="trophy" size={72} style={{ color: '#e8a50f' }} />
+            </motion.div>
+            <div className="cele-title">{ach.name}</div>
+            <div className="cele-desc">{ach.desc}</div>
+            <div className="cele-xp">+{ach.tier * XP_PER_TIER} 经验</div>
+            <div>
+              <motion.button
+                type="button"
+                className="cta mint"
+                whileTap={{ scale: 0.95 }}
+                onClick={() => {
+                  burst({ x: 0.5, y: 0.6 })
+                  dismiss()
+                }}
+              >
+                收下徽章！
+              </motion.button>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  )
+}

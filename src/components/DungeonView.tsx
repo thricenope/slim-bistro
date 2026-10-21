@@ -1,0 +1,139 @@
+import { useMemo, useState } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
+import { useGame } from '../store'
+import { monthDays, monthSummary } from '../logic/stats'
+import { guestById } from '../logic/guests'
+import { monthLabel, parseYmd, today } from '../logic/dates'
+import { Guest } from './Guest'
+import { Icon } from './Icon'
+import { DaySheet } from './DaySheet'
+
+const WEEK = ['日', '一', '二', '三', '四', '五', '六']
+
+/** 营业：日历即每日菜单，每格一位光临的常客 */
+export const DungeonView = () => {
+  const records = useGame((s) => s.records)
+  const now = new Date()
+  const [ym, setYm] = useState({ y: now.getFullYear(), m: now.getMonth() })
+  const [sel, setSel] = useState<string | null>(null)
+
+  const days = useMemo(() => monthDays(ym.y, ym.m, records), [ym, records])
+  // 只统计本月格子，日历上下月补位不计入
+  const summary = useMemo(() => monthSummary(days.filter((d) => d.inMonth)), [days])
+  const t = today()
+
+  const shift = (delta: number) => {
+    setYm(({ y, m }) => {
+      const d = new Date(y, m + delta, 1)
+      return { y: d.getFullYear(), m: d.getMonth() }
+    })
+  }
+
+  const canFuture = ym.y < now.getFullYear() || (ym.y === now.getFullYear() && ym.m > now.getMonth())
+
+  return (
+    <div>
+      <div className="cal-head">
+        <button type="button" className="cal-nav" aria-label="上个月" onClick={() => shift(-1)}>
+          <Icon name="left" size={19} />
+        </button>
+        <div className="title">{monthLabel(ym.y, ym.m)}</div>
+        {canFuture ? (
+          <div style={{ width: 38 }} />
+        ) : (
+          <button type="button" className="cal-nav" aria-label="下个月" onClick={() => shift(1)}>
+            <Icon name="right" size={19} />
+          </button>
+        )}
+        <button type="button" className="cal-today-btn" onClick={() => setYm({ y: now.getFullYear(), m: now.getMonth() })}>
+          回今天
+        </button>
+      </div>
+
+      <div className="card">
+        <div className="cal-week" aria-hidden="true">
+          {WEEK.map((w, i) => (
+            <span key={w} className={i === 0 || i === 6 ? 'wend' : ''}>
+              {w}
+            </span>
+          ))}
+        </div>
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={`${ym.y}-${ym.m}`}
+            className="cal-grid"
+            initial={{ opacity: 0, x: 14 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -14 }}
+            transition={{ duration: 0.2, ease: 'easeOut' }}
+          >
+            {days.map((d) => {
+              const dayNum = parseYmd(d.date).getDate()
+              const isToday = d.date === t
+              const isFuture = d.date > t
+              return (
+                <button
+                  type="button"
+                  key={d.date}
+                  className={[
+                    'cal-cell',
+                    d.inMonth ? '' : 'dim',
+                    isFuture ? 'dim' : '',
+                    isToday ? 'today' : '',
+                    sel === d.date ? 'sel' : '',
+                  ].join(' ')}
+                  aria-label={`${d.date} ${d.verdict === 'pending' ? '未开张' : d.verdict === 'fail' ? '客人摆摆手' : d.win ? '好评如潮' : '一般般'}，常客：${guestById(d.monster).name}`}
+                  disabled={isFuture}
+                  onClick={() => setSel(d.date)}
+                >
+                  <span className="dnum" aria-hidden="true" style={d.verdict !== 'pending' ? { display: 'none' } : undefined}>
+                    {dayNum}
+                  </span>
+                  {d.win ? (
+                    <motion.span
+                      className="mark"
+                      initial={{ scale: 0, rotate: -30 }}
+                      animate={{ scale: 1, rotate: 0 }}
+                      transition={{ type: 'spring', stiffness: 480, damping: 16 }}
+                    >
+                      <span className="win-flag" />
+                    </motion.span>
+                  ) : d.verdict === 'fail' ? (
+                    <span className="mark dungeon-angry" title="客人摆摆手">
+                      <Guest species={d.monster} mood="full" size={30} />
+                    </span>
+                  ) : d.verdict === 'plain' ? (
+                    <span className="mark dungeon-dim">
+                      <Guest species={d.monster} mood="hurt" size={30} />
+                    </span>
+                  ) : (
+                    <span className="dungeon-idle">
+                      <Guest species={d.monster} mood="full" size={30} />
+                    </span>
+                  )}
+                </button>
+              )
+            })}
+          </motion.div>
+        </AnimatePresence>
+
+        <div className="month-sum">
+          本月营业 <b>{summary.recorded}</b> 天 · 好评 <b>{summary.wins}</b> 天
+        </div>
+      </div>
+
+      <div className="legend">
+        <span className="li"><span className="win-flag" style={{ width: 14, height: 16 }} /> 好评如潮</span>
+        <span className="li"><span className="dungeon-dim" style={{ width: 14, height: 14, borderRadius: 4 }} /> 一般般</span>
+        <span className="li"><span className="dungeon-angry" style={{ width: 14, height: 14, borderRadius: 4 }} /> 摆摆手</span>
+        <span className="li"><span className="dungeon-idle" style={{ width: 14, height: 14, borderRadius: 4, background: 'var(--line)' }} /> 未开张</span>
+      </div>
+
+      <p className="empty-tip">每天一位常客光临 · 周末有贵宾美食家 · 点任意日期补开</p>
+
+      <AnimatePresence>
+        {sel && <DaySheet date={sel} onClose={() => setSel(null)} />}
+      </AnimatePresence>
+    </div>
+  )
+}

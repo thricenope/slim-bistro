@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- 圆耳朵 -->
+  <circle cx="13" cy="23" r="8" fill="#C89A6B" stroke="#8A5E33" stroke-width="3"/>
+  <circle cx="51" cy="23" r="8" fill="#C89A6B" stroke="#8A5E33" stroke-width="3"/>
+  <circle cx="13" cy="23" r="3.2" fill="#E8B98A"/>
+  <circle cx="51" cy="23" r="3.2" fill="#E8B98A"/>
+  <!-- 头 -->
+  <circle cx="32" cy="36" r="21" fill="#C89A6B" stroke="#8A5E33" stroke-width="3"/>
+  <!-- 口鼻 -->
+  <ellipse cx="32" cy="43" rx="10" ry="8" fill="#F4E3C8"/>
+  <path d="M32 39 l-3 2.6 3 2.6 3 -2.6 z" fill="#4A3527"/>
+  <path d="M28.5 46 q3.5 3 7 0" stroke="#4A3527" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+  <circle cx="24" cy="34" r="2.6" fill="#4A3527"/>
+  <circle cx="40" cy="34" r="2.6" fill="#4A3527"/>
+  <circle cx="19" cy="40" r="3" fill="#E86A4E" opacity=".45"/>
+  <circle cx="45" cy="40" r="3" fill="#E86A4E" opacity=".45"/>
+  <!-- 白厨师帽 -->
+  <path d="M23 13 C18 13 15 10.4 15 7.2 C15 4.4 17.4 2.6 20 3.4 C21.2 1.2 24 .4 26.4 1.6 C28.2 -.2 31.8 -.2 33.6 1.6 C36 .4 38.8 1.2 40 3.4 C42.6 2.6 45 4.4 45 7.2 C45 10.4 42 13 37 13 z" fill="#FFFFFF" stroke="#C9B8A0" stroke-width="2.5" stroke-linejoin="round" transform="translate(3 0)"/>
+  <rect x="22" y="12" width="20" height="6" rx="3" fill="#FFFFFF" stroke="#C9B8A0" stroke-width="2.5"/>
+</svg>
